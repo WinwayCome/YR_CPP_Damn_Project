@@ -1,0 +1,6 @@
+Name admin
+Password admin
+Level super
+Name test1
+Password testest1
+Level normal
