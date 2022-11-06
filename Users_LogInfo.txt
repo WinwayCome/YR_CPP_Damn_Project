@@ -4,3 +4,6 @@ Level super
 Name test1
 Password testest1
 Level normal
+Name Yurui
+Password adminYurui
+Level super
