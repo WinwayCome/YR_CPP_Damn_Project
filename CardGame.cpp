@@ -5,17 +5,19 @@ using namespace std;
 class CCard
 {
 private:
-    double naPip[5]; //一共五张牌
+    int naPip[5]; //一共五张牌
     int nNumber;     //实际发了多少牌
     int nDollar;     //有多少钱
     int nGameble;    //赌注
     int nWin;        //赢局数
     int nLose;       //输局数
     int nDraw;       //平局数
-    int Level;       //权限标识符
+    string Level;
+    string Name;
+    string Password;
 
 public:
-    CCard();
+    CCard(string name, string password, string level);
     ~CCard();
     void FirstPlayTwo();
     int GetNumber();
@@ -35,13 +37,27 @@ public:
     void setLevel(int);
 };
 
-CCard::CCard(/* args */)
+CCard::CCard(string name, string password, string level)
 {
+    memset(naPip, 0, sizeof(naPip));
+    nNumber = 0;
+    nDollar = 1000;
+    nGameble = 50;
+    nWin = 0;
+    nLose = 0;
+    nDraw = 0;
+    Level = level;
+    Name = name;
+    Password = password;
 }
 
 CCard::~CCard()
 {
 }
+CCard* Player;
+inline void Create();
+inline void Login();
+inline void Welcome();
 inline void Create()
 {
     string name, password;
@@ -54,10 +70,17 @@ inline void Create()
     while (true)
     {
         check = true;
-        printf("请键入一行用户名：\n");
+        printf("请键入一行用户名, 退出请键入exit:\n");
         getline(cin, name);
+        if (name == "exit")
+        {
+            file.close();
+            file.clear();
+            Welcome();
+            return;
+        }
         name = "Name " + name;
-        file.seekg(0, std::ios::beg);
+        file.seekg(0, std::ios::beg); //回到文件开头读取
         while (getline(file, name_list))
         {
             if (name.compare(name_list) == 0)
@@ -109,8 +132,60 @@ inline void Create()
 }
 inline void Login()
 {
+    string name, password;
+    string name_list;
+    string level;
+    bool check;
+    ifstream file;
+    file.open("./Users_LogInfo.txt");
+    while (true)
+    {
+        check = false;
+        printf("请输入用户名,退出请键入exit:\n");
+        getline(cin, name);
+        if (name == "exit")
+        {
+            file.close();
+            file.clear();
+            Welcome();
+            return;
+        }
+        name = "Name " + name;
+        file.seekg(0, std::ios::beg);
+        while (getline(file, name_list))
+        {
+            if (name.compare(name_list) == 0)
+            {
+                check = true;
+                break;
+            }
+        }
+        if (!check)
+            printf("未找到该用户,请考虑创建用户\n");
+        else
+            break;
+    }
+    getline(file, name_list);
+    while (true)
+    {
+        printf("请输入密码,退出请键入exit:\n");
+        getline(cin, password);
+        if (password == "exit")
+        {
+            file.close();
+            file.clear();
+            Welcome();
+            return;
+        }
+        password = "Password " + password;
+        if (password != name_list)
+            printf("密码错误,请重新输入:\n");
+        else
+        break;
+    }
+    Player = new CCard(name, password, "Level " + level);
 }
-inline void Welcome() //获取登录或创建指令
+inline void Welcome()
 {
     printf("输入'create'进行角色创建,输入'login'进行角色登录\n");
     string log;
