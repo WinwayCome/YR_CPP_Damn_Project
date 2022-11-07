@@ -85,6 +85,14 @@ inline void Welcome();
 inline void MainFrame();
 inline void NewGame();
 inline void Info();
+inline void PlayerTurn();   //玩家回合
+inline void ComputerTurn(); //电脑回合
+inline bool OpenNew();      //尝试开启新一轮游戏
+inline void NewTurn();      //新一轮游戏
+inline void NewTurn()
+{
+    return;
+}
 inline void Create()
 {
     string name, password;
@@ -305,7 +313,29 @@ inline void Info()
 }
 inline void NewGame()
 {
+    while(OpenNew()&&Player->getDollar()>0)
+    NewTurn();
+    Info();
+    delete Player;
+    delete Computer;
+    printf("本次游戏已结束\n");
+    Welcome();
     return;
+}
+inline bool OpenNew()
+{
+    Info();
+    string order;
+    while (true)
+    {
+        printf("是否要进行下一轮?[Y/N]");
+        getline(cin, order);
+        if (order == "Y" || order == "y")
+            return true;
+        else if (order == "N" || order == "n")
+            return false;
+        printf("无效指令,请重新输入\n");
+    }
 }
 int main()
 {
