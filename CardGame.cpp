@@ -2,77 +2,150 @@
 #include <conio.h>
 
 using namespace std;
+int card;
+int card_list[13];
+int cnt_list;
 class CCard
 {
 private:
-    int naPip[5]; //一共五张牌
-    int nNumber;  //实际发了多少牌
-    int nDollar;  //有多少钱
-    int nGameble; //赌注
-    int nWin;     //赢局数
-    int nLose;    //输局数
-    int nDraw;    //平局数
+    double naPip[5]; //一共五张牌
+    int nNumber;     //实际发了多少牌
+    int nDollar;     //有多少钱
+    int nGameble;    //赌注
+    int nWin;        //赢局数
+    int nLose;       //输局数
+    int nDraw;       //平局数
     string Level;
     string Name;
     string Password;
+    char Card[5];
 
 public:
     CCard(string name, string password, string level);
     ~CCard();
     void FirstPlayTwo();
-    int GetNumber();
-    double GetPip();
+    int GetNumber(); //返回牌数
+    double GetPip(); //返回点数大小
+    void DisplayPip();
     void DisplayPip(int);
-    void TurnPlay();
+    void TurnPlay(); //加一张牌
     void Win();
     void Lose();
     void Draw();
     int SetGamble(int);
     int GetMoney;
-    void DisplayInfo();
+    void DisplayInfo(); //对局统计
     char *GetCurrentCard();
     void DeleteCard(void);
     void ModifyCard(double);
     int AddGamble(int);
     void setLevel(int);
-    string getName();
     int getDollar();
-    int getWin();
-    int getDraw();
-    int getLose();
+    void init();
 };
 int CCard::getDollar()
 {
     return this->nDollar;
 }
-int CCard::getWin()
+void CCard::init()
 {
-    return this->nWin;
+    this->nNumber = 0;
+    this->nGameble = 0;
 }
-int CCard::getDraw()
+double CCard::GetPip()
 {
-    return this->nDraw;
+    double ans = 0;
+    for (int i = 0; i < this->nNumber; ++i)
+        ans += naPip[i];
+    return ans;
 }
-int CCard::getLose()
+void CCard::TurnPlay()
 {
-    return this->nLose;
+    card = card_list[cnt_list++];
+    char ch;
+    if (card == 11)
+        ch = 'J';
+    else if (card == 12)
+        ch = 'Q';
+    else if (card == 13)
+        ch = 'K';
+    else
+        ch = card + '0';
+    if (card > 10)
+    {
+        this->naPip[this->nNumber] = 0.5;
+        this->Card[this->nNumber] = ch;
+        this->nNumber++;
+    }
+    else
+    {
+        this->naPip[this->nNumber] = (double)card;
+        this->Card[this->nNumber] = ch;
+        this->nNumber++;
+    }
 }
-string CCard::getName()
+int CCard::GetNumber()
 {
-    return this->Name;
+    return this->nNumber;
+}
+void CCard::FirstPlayTwo()
+{
+    TurnPlay();
+    TurnPlay();
+    return;
+}
+void CCard::DisplayPip()
+{
+    printf("cardnum %d\n", this->GetNumber());
+    printf("玩家手牌:");
+    for (int i = 0; i < this->GetNumber(); ++i)
+    {
+        printf(" %c   ", this->Card[i]);
+    }
+    printf("\n玩家点数:");
+    for (int i = 0; i < this->GetNumber(); ++i)
+    {
+        printf("%4.1f ", this->naPip[i]);
+    }
+    printf("\n玩家总点数:%.1f\n\n", this->GetPip());
+}
+void CCard::DisplayPip(int x)
+{
+    printf("电脑手牌:");
+    for (int i = 0; i < this->GetNumber(); ++i)
+    {
+        printf(" %c   ", (i == 0) ? '?' : this->Card[i]);
+    }
+    printf("\n电脑点数:");
+    printf(" %c   ", '?');
+    for (int i = 1; i < this->GetNumber(); ++i)
+    {
+        printf("%4.1f ", this->naPip[i]);
+    }
+    printf("\n电脑总点数:? + %.1f\n\n", this->GetPip() - this->naPip[0]);
+}
+void CCard::DisplayInfo()
+{
+    printf("对局统计:\n");
+    printf("账户名:%s\n", this->Name.c_str());
+    printf("剩余本金:%d\n", this->nDollar);
+    printf("本局胜场数:%d\n", this->nWin);
+    printf("本局平场数:%d\n", this->nDraw);
+    printf("本局败场数:%d\n", this->nLose);
+    return;
 }
 CCard::CCard(string name, string password, string level)
 {
-    memset(naPip, 0, sizeof(naPip));
+    memset(this->naPip, 0, sizeof(this->naPip));
     nNumber = 0;
     nDollar = 1000;
     nGameble = 50;
     nWin = 0;
     nLose = 0;
     nDraw = 0;
-    Level = level;
-    Name = name;
-    Password = password;
+    this->Level = level;
+    this->Name = name;
+    this->Password = password;
 }
 CCard::~CCard()
 {
@@ -91,6 +164,37 @@ inline bool OpenNew();      //尝试开启新一轮游戏
 inline void NewTurn();      //新一轮游戏
 inline void NewTurn()
 {
+    printf("\n----------------------------------------------------\n");//分割线
+    srand((unsigned)time(NULL)); //以当前时间初始化随机数种子
+    int cnt = 0;
+    while (cnt != 13)
+    {
+        bool check = true;
+        card = rand() % 13 + 1;
+        for (int i = 0; i < cnt; ++i)
+        {
+            if (card == card_list[i])
+            {
+                check = false;
+                break;
+            }
+        }
+        if (check)
+        {
+            card_list[cnt++] = card;
+        }
+    }
+    printf("\n");
+    cnt_list = 0;
+    Player->init();
+    Computer->init();
+    //初始化完毕,正式开始游戏
+    Player->FirstPlayTwo();
+    Computer->FirstPlayTwo();
+    printf("初始牌已发放\n");
+    //初始两张牌发放完毕
+    Player->DisplayPip();
+    Computer->DisplayPip(1);
     return;
 }
 inline void Create()
@@ -180,7 +284,6 @@ inline void Login()
     string level;
     bool check;
     ifstream file;
-    file.open("./Users_LogInfo.txt");
     while (true)
     {
         check = false;
@@ -194,7 +297,7 @@ inline void Login()
             return;
         }
         name = "Name " + name;
-        file.seekg(0, std::ios::beg);
+        file.open("./Users_LogInfo.txt");
         while (getline(file, name_list))
         {
             if (name.compare(name_list) == 0)
@@ -204,7 +307,11 @@ inline void Login()
             }
         }
         if (!check)
+        {
+            file.close();
+            file.clear();
             printf("未找到该用户,请考虑创建用户\n");
+        }
         else
             break;
     }
@@ -213,6 +320,7 @@ inline void Login()
     {
         printf("请输入密码,退出请键入/exit:\n");
         char ch;
+        password = "";
         while (true)
         {
             ch = getch();
@@ -247,7 +355,7 @@ inline void Login()
     }
     Player = new CCard(name, password, "Level " + level);
     Computer = new CCard("Name Computer", "Password Computer", "Level normal");
-    printf("登陆成功! %s\n", Player->getName().c_str());
+    printf("登陆成功!\n");
     MainFrame();
 }
 inline void Welcome()
@@ -303,18 +411,12 @@ inline void MainFrame()
 }
 inline void Info()
 {
-    printf("总对局统计:\n");
-    printf("账户名:%s\n", Player->getName().c_str());
-    printf("剩余本金:%d\n", Player->getDollar());
-    printf("本局胜场数:%d\n", Player->getWin());
-    printf("本局平场数:%d\n", Player->getDraw());
-    printf("本局败场数:%d\n", Player->getLose());
-    return;
+    Player->DisplayInfo();
 }
 inline void NewGame()
 {
-    while(OpenNew()&&Player->getDollar()>0)
-    NewTurn();
+    while (OpenNew() && Player->getDollar() > 0)
+        NewTurn();
     Info();
     delete Player;
     delete Computer;
@@ -339,7 +441,6 @@ inline bool OpenNew()
 }
 int main()
 {
-    srand((unsigned)time(NULL)); //以当前时间初始化随机数种子
     printf("欢迎来到21点游戏!\n");
     Welcome();
     return 0;
