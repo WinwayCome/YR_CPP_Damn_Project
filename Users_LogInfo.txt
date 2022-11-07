@@ -7,3 +7,6 @@ Level normal
 Name Yurui
 Password adminYurui
 Level super
+Name TestinCMD
+Password TestinCMD
+Level super

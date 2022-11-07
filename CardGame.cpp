@@ -6,12 +6,12 @@ class CCard
 {
 private:
     int naPip[5]; //一共五张牌
-    int nNumber;     //实际发了多少牌
-    int nDollar;     //有多少钱
-    int nGameble;    //赌注
-    int nWin;        //赢局数
-    int nLose;       //输局数
-    int nDraw;       //平局数
+    int nNumber;  //实际发了多少牌
+    int nDollar;  //有多少钱
+    int nGameble; //赌注
+    int nWin;     //赢局数
+    int nLose;    //输局数
+    int nDraw;    //平局数
     string Level;
     string Name;
     string Password;
@@ -35,8 +35,32 @@ public:
     void ModifyCard(double);
     int AddGamble(int);
     void setLevel(int);
+    string getName();
+    int getDollar();
+    int getWin();
+    int getDraw();
+    int getLose();
 };
-
+int CCard::getDollar()
+{
+    return this->nDollar;
+}
+int CCard::getWin()
+{
+    return this->nWin;
+}
+int CCard::getDraw()
+{
+    return this->nDraw;
+}
+int CCard::getLose()
+{
+    return this->nLose;
+}
+string CCard::getName()
+{
+    return this->Name;
+}
 CCard::CCard(string name, string password, string level)
 {
     memset(naPip, 0, sizeof(naPip));
@@ -50,14 +74,17 @@ CCard::CCard(string name, string password, string level)
     Name = name;
     Password = password;
 }
-
 CCard::~CCard()
 {
 }
-CCard* Player;
+CCard *Player;
+CCard *Computer;
 inline void Create();
 inline void Login();
 inline void Welcome();
+inline void MainFrame();
+inline void NewGame();
+inline void Info();
 inline void Create()
 {
     string name, password;
@@ -70,14 +97,19 @@ inline void Create()
     while (true)
     {
         check = true;
-        printf("请键入一行用户名, 退出请键入exit:\n");
+        printf("请键入一行用户名, 退出请键入/exit:\n");
         getline(cin, name);
-        if (name == "exit")
+        if (name == "/exit")
         {
             file.close();
             file.clear();
             Welcome();
             return;
+        }
+        if (name == "exit")
+        {
+            printf("无效用户名,请重新输入\n");
+            Create();
         }
         name = "Name " + name;
         file.seekg(0, std::ios::beg); //回到文件开头读取
@@ -103,7 +135,10 @@ inline void Create()
     {
         ch = getch();
         if (ch == '\r')
+        {
+            printf("\n");
             break;
+        }
         if (ch == '\b')
         {
             printf("\b");
@@ -141,9 +176,9 @@ inline void Login()
     while (true)
     {
         check = false;
-        printf("请输入用户名,退出请键入exit:\n");
+        printf("请输入用户名,退出请键入/exit:\n");
         getline(cin, name);
-        if (name == "exit")
+        if (name == "/exit")
         {
             file.close();
             file.clear();
@@ -168,9 +203,28 @@ inline void Login()
     getline(file, name_list);
     while (true)
     {
-        printf("请输入密码,退出请键入exit:\n");
-        getline(cin, password);
-        if (password == "exit")
+        printf("请输入密码,退出请键入/exit:\n");
+        char ch;
+        while (true)
+        {
+            ch = getch();
+            if (ch == '\r')
+            {
+                printf("\n");
+                break;
+            }
+            if (ch == '\b')
+            {
+                printf("\b");
+                password = password.substr(0, password.length() - 1);
+            }
+            else
+            {
+                printf(" ");
+                password += ch;
+            }
+        }
+        if (password == "/exit")
         {
             file.close();
             file.clear();
@@ -181,27 +235,76 @@ inline void Login()
         if (password != name_list)
             printf("密码错误,请重新输入:\n");
         else
-        break;
+            break;
     }
     Player = new CCard(name, password, "Level " + level);
+    Computer = new CCard("Name Computer", "Password Computer", "Level normal");
+    printf("登陆成功! %s\n", Player->getName().c_str());
+    MainFrame();
 }
 inline void Welcome()
 {
-    printf("输入'create'进行角色创建,输入'login'进行角色登录\n");
+    printf("输入'/create'进行角色创建,输入'/login'进行角色登录,输入/exit退出程序\n");
     string log;
     getline(cin, log);
-    if (log == "create")
+    if (log == "/create")
     {
         Create();
         Welcome();
     }
-    else if (log == "login")
+    else if (log == "/login")
         Login();
+    else if (log == "/exit")
+        return;
     else
     {
         printf("无效指令，请重新输入\n");
         Welcome();
     }
+    return;
+}
+inline void MainFrame()
+{
+    string order;
+    printf("请输入指令,输入/help查看指令列表:\n");
+    getline(cin, order);
+    if (order == "/help")
+    {
+        printf("输入/new开始新游戏\n输入/exit退出登录\n输入/info查看总对局统计\n");
+        MainFrame();
+    }
+    else if (order == "/new")
+        NewGame();
+    else if (order == "/exit")
+    {
+        delete Player;
+        delete Computer;
+        Welcome();
+    }
+    else if (order == "/info")
+    {
+        Info();
+        MainFrame();
+    }
+    else
+    {
+        printf("无效指令,请重新输入\n");
+        MainFrame();
+    }
+    return;
+}
+inline void Info()
+{
+    printf("总对局统计:\n");
+    printf("账户名:%s\n", Player->getName().c_str());
+    printf("剩余本金:%d\n", Player->getDollar());
+    printf("本局胜场数:%d\n", Player->getWin());
+    printf("本局平场数:%d\n", Player->getDraw());
+    printf("本局败场数:%d\n", Player->getLose());
+    return;
+}
+inline void NewGame()
+{
     return;
 }
 int main()
