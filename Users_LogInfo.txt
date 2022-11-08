@@ -3,7 +3,7 @@ Password admin
 Level super
 Name test1
 Password testest1
-Level normal
+Level advanced
 Name Yurui
 Password adminYurui
 Level super

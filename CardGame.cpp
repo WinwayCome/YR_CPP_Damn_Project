@@ -1,6 +1,10 @@
-#include <bits/stdc++.h>
+#include <cstring>
 #include <conio.h>
-
+#include <cstdio>
+#include <iostream>
+#include <fstream>
+#include <ctime>
+#include <cstdlib>
 using namespace std;
 int card;
 int card_list[13];
@@ -24,25 +28,48 @@ public:
     CCard(string name, string password, string level);
     ~CCard();
     void FirstPlayTwo();
-    int GetNumber(); //返回牌数
-    double GetPip(); //返回点数大小
-    void DisplayPip();
-    void DisplayPip(int);
-    void TurnPlay(); //加一张牌
-    void Win();
-    void Lose();
-    void Draw();
-    int SetGamble(int);
-    int GetMoney;
-    void DisplayInfo(); //对局统计
+    int GetNumber();      //返回牌数
+    double GetPip();      //返回点数大小
+    void DisplayPip();    //显示玩家牌
+    void DisplayPip(int); //显示计算机牌
+    void TurnPlay();      //加一张牌
+    void Win();           //赢后操作
+    void Lose();          //输后操作
+    void Draw();          //平局操作
+    void SetGamble(int);  //设置赌注(加注同)
+    void DisplayInfo();   //对局统计
     char *GetCurrentCard();
     void DeleteCard(void);
     void ModifyCard(double);
-    int AddGamble(int);
-    void setLevel(int);
-    int getDollar();
+    int getDollar(); //返回钱数
     void init();
+    string getLevel();
 };
+void CCard::Lose()
+{
+    ++this->nLose;
+    printf("您输了,远离赌桌,远离黑暗,珍爱生命,拥抱阳光\n");
+}
+void CCard::Draw()
+{
+    ++this->nDraw;
+    printf("您平局了,从现在做起,模范遵守法纪,自觉抵制赌博的诱惑和侵蚀,端正自己带动别人\n");
+}
+void CCard::Win()
+{
+    ++this->nWin;
+    printf("您赢了,但是赌博是社会毒瘤,万恶之源\n");
+}
+
+string CCard::getLevel()
+{
+    return this->Level;
+}
+void CCard::SetGamble(int bet)
+{
+    this->nGameble += bet;
+    this->nDollar -= bet;
+}
 int CCard::getDollar()
 {
     return this->nDollar;
@@ -69,6 +96,8 @@ void CCard::TurnPlay()
         ch = 'Q';
     else if (card == 13)
         ch = 'K';
+    else if (card == 10)
+        ch = 'T';
     else
         ch = card + '0';
     if (card > 10)
@@ -158,14 +187,13 @@ inline void Welcome();
 inline void MainFrame();
 inline void NewGame();
 inline void Info();
-inline void PlayerTurn();   //玩家回合
-inline void ComputerTurn(); //电脑回合
-inline bool OpenNew();      //尝试开启新一轮游戏
-inline void NewTurn();      //新一轮游戏
+inline bool OpenNew(); //尝试开启新一轮游戏
+inline void NewTurn(); //新一轮游戏
 inline void NewTurn()
 {
-    printf("\n----------------------------------------------------\n");//分割线
-    srand((unsigned)time(NULL)); //以当前时间初始化随机数种子
+    system("cls");
+    printf("----------------------------------------------------"); //分割线
+    srand((unsigned)time(NULL));                                    //以当前时间初始化随机数种子
     int cnt = 0;
     while (cnt != 13)
     {
@@ -189,12 +217,130 @@ inline void NewTurn()
     Player->init();
     Computer->init();
     //初始化完毕,正式开始游戏
+    while (true)
+    {
+        printf("您当前本金为%d,请设置初始赌注:", Player->getDollar());
+        int bet;
+        cin >> bet;
+        cin.ignore(1024, '\n');
+        if (bet <= Player->getDollar())
+        {
+            Player->SetGamble(bet);
+            break;
+        }
+        printf("赌注不能大于本金\n");
+    }
     Player->FirstPlayTwo();
     Computer->FirstPlayTwo();
+    printf("\n----------------------------------------------------\n\n"); //分割线
     printf("初始牌已发放\n");
     //初始两张牌发放完毕
     Player->DisplayPip();
     Computer->DisplayPip(1);
+    string order;
+    bool check_stand = false;
+    printf("您的回合:\n");
+    while (true)
+    {
+        printf("\n----------------------------------------------------\n\n"); //分割线
+        if (check_stand)
+        {
+            printf("您的回合已结束\n");
+            break;
+        }
+        else
+        {
+            if (Player->GetNumber() == 5)
+            {
+                printf("您的手牌已满,无法获得新牌/n");
+                system("pause");
+                check_stand = true;
+            }
+            else if (Player->GetPip() == 21)
+            {
+                printf("您的牌点为21点,无法获得新牌/n");
+                system("pause");
+                check_stand = true;
+            }
+            else if (Player->getLevel() == "Level advanced" && (((card_list[cnt_list] > 10) ? 0.5 : (double)card_list[cnt_list]) + Player->GetPip() > 21))
+            {
+                printf("您的权限为:Advanced,下一张牌的点数为%.1f,若加入手牌将会爆牌,已自动为您停止要牌\n", (card_list[cnt_list] > 10) ? 0.5 : (double)card_list[cnt_list]);
+                check_stand = true;
+            }
+            else
+            {
+                if (Player->getLevel() == "Level advanced")
+                    printf("您的权限为:Advanced,下一张牌的点数为%.1f\n", (card_list[cnt_list] > 10) ? 0.5 : (double)card_list[cnt_list]);
+                printf("请输入指令,输入/help查看指令列表:\n");
+                getline(cin, order);
+                if (order == "/help")
+                    printf("输入/hit获得新牌\n输入/stand停止要牌\n输入/exit退出本局记负\n超级玩家输入/cheat作弊\n");
+                else if (order == "/hit")
+                {
+                    Player->TurnPlay();
+                    printf("您的新手牌已发放:\n");
+                    Player->DisplayPip();
+                    Computer->DisplayPip(1);
+                    if (Player->getDollar() > 0)
+                    {
+                        printf("是否加注?[Y/N]");
+                        while (true)
+                        {
+                            bool ch = false;
+                            getline(cin, order);
+                            if (order == "Y" || order == "y")
+                            {
+                                while (true)
+                                {
+                                    printf("您当前本金为%d,请加注:", Player->getDollar());
+                                    int bet;
+                                    cin >> bet;
+                                    cin.ignore(1024, '\n');
+                                    if (bet <= Player->getDollar())
+                                    {
+                                        Player->SetGamble(bet);
+                                        ch = true;
+                                        break;
+                                    }
+                                    printf("赌注不能大于本金\n");
+                                }
+                            }
+                            else if (order == "N" || order == "n")
+                            {
+                                printf("您选择不加注\n");
+                                ch = true;
+                            }
+                            else
+                                printf("无效指令,请重新输入\n");
+                            if (ch)
+                                break;
+                        }
+                    }
+                    else
+                        printf("您的本金为0,无法加注\n");
+                }
+                else if (order == "/stand")
+                {
+                    printf("您选择不要牌\n");
+                    check_stand = true;
+                }
+                else if (order == "/exit")
+                {
+                    Player->Lose();
+                    MainFrame();
+                }
+                else if (order == "/cheat")
+                {
+                    if (Player->getLevel() != "Level super")
+                        printf("权限不足,指令无效\n");
+                    else
+                    {
+                    }
+                }
+            }
+        }
+    }
+
     return;
 }
 inline void Create()
@@ -316,6 +462,9 @@ inline void Login()
             break;
     }
     getline(file, name_list);
+    getline(file, level);
+    file.close();
+    file.clear();
     while (true)
     {
         printf("请输入密码,退出请键入/exit:\n");
@@ -342,8 +491,6 @@ inline void Login()
         }
         if (password == "/exit")
         {
-            file.close();
-            file.clear();
             Welcome();
             return;
         }
@@ -353,7 +500,7 @@ inline void Login()
         else
             break;
     }
-    Player = new CCard(name, password, "Level " + level);
+    Player = new CCard(name, password, level);
     Computer = new CCard("Name Computer", "Password Computer", "Level normal");
     printf("登陆成功!\n");
     MainFrame();
